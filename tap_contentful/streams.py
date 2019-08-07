@@ -7,7 +7,7 @@ LOGGER = singer.get_logger()
 
 class ContentfulStream(Stream):
     """
-    methods to track state for each individual ABC Financial club
+    methods to track state for individual Contentful resources
     """
 
     def __init__(self, config=None, state=None, catalog=None):

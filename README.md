@@ -13,8 +13,8 @@ Content Delivery API: https://www.contentful.com/developers/docs/references/cont
 
 #### Discover mode:
 
-`tap-contentful --config tap_config.json --discover > catalog.json`
+`tap-contentful --config config.json --discover > catalog.json`
 
 #### Sync mode:
 
-`tap-contentful --config tap_config.json -p catalog.json -s state.json`
+`tap-contentful --config config.json -p catalog.json -s state.json`

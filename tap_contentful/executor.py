@@ -55,6 +55,7 @@ class ContentfulExecutor(TapExecutor):
 
             request_config = {
                 'url': self.generate_api_url(stream, space_id),
+                "headers": {},
                 'params': self.build_initial_params(last_updated),
                 'run': True
             }
@@ -91,6 +92,7 @@ class ContentfulExecutor(TapExecutor):
         for space_id in self.client.config['space_ids']:
             request_config = {
                 'url': self.generate_api_url(stream, space_id),
+                "headers": {},
                 'params': self.build_params(stream),
                 'run': True
             }
@@ -145,12 +147,14 @@ class ContentfulExecutor(TapExecutor):
         if num_records_received < 1000:  # 1000 is the max num of records per request
             return {
                 "url": request_config['url'],
+                "headers": {},
                 "params": request_config['params'],
                 "run": False
             }
         else:
             return {
                 "url": request_config['url'],
+                "headers": {},
                 "params": self.build_next_params(request_config['params']),
                 "run": True
             }
