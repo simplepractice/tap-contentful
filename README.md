@@ -1,9 +1,9 @@
-# tap-abcfinancial
+# tap-contenful
 
-Singer tap to extract data from the ABC Financial API, conforming to the Singer
+Singer tap to extract data from the Contentful Content Delivery API, conforming to the Singer
 spec: https://github.com/singer-io/getting-started/blob/master/docs/SPEC.md
 
-ABC Financial API: https://abcfinancial.3scale.net/docs
+Content Delivery API: https://www.contentful.com/developers/docs/references/content-delivery-api/
 
 ## Setup
 
@@ -13,8 +13,8 @@ ABC Financial API: https://abcfinancial.3scale.net/docs
 
 #### Discover mode:
 
-`tap-abcfinancial --config tap_config.json --discover > catalog.json`
+`tap-contentful --config tap_config.json --discover > catalog.json`
 
 #### Sync mode:
 
-`tap-abcfinancial --config tap_config.json -p catalog.json -s state.json`
+`tap-contentful --config tap_config.json -p catalog.json -s state.json`
