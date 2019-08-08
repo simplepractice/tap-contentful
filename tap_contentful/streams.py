@@ -19,10 +19,10 @@ class EntriesStream(Stream):
     schema = {
         "properties": {
             "sys": {
-                "type": ["null", "string"]
+                "type": ["null", "object"]
             },
             "fields": {
-                "type": ["null", "string"]
+                "type": ["null", "object"]
             },
         }
     }
