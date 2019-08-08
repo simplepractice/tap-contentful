@@ -1,7 +1,12 @@
-from tap_kit import main_method, BaseClient
+import singer
+
+from .client import BaseClient
 from .streams import EntriesStream
 from .executor import ContentfulExecutor
+from .utils import main_method
 
+
+LOGGER = singer.get_logger()
 
 REQUIRED_CONFIG_KEYS = [
 	"start_date",
