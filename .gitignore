@@ -6,6 +6,6 @@
 .idea*
 *.egg-info*
 *.pyc
-test.out
+*.out
 dist
 build

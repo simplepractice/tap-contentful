@@ -3,7 +3,7 @@ import singer
 from tap_kit import TapExecutor
 from tap_kit.utils import (transform_write_and_count,
                            format_last_updated_for_request)
-from .streams import ContentfulStream
+
 
 LOGGER = singer.get_logger()
 
@@ -22,98 +22,51 @@ class ContentfulExecutor(TapExecutor):
         self.replication_key_format = 'datetime_string'
         self.base_url = 'https://cdn.contentful.com'
         self.access_token = self.client.config['access_token']
-
-    def sync(self):
-        self.set_catalog()
-
-        for c in self.selected_catalog:
-            self.sync_stream(
-                ContentfulStream(config=self.config, state=self.state, catalog=c)
-            )
-
-    def sync_stream(self, stream):
-        stream.write_schema()
-
-        if stream.is_incremental:
-            stream.set_stream_state(self.state)
-            self.call_incremental_stream(stream)
-        else:
-            self.call_full_stream(stream)
+        self.space_id = self.client.config['space_id']
 
     def call_incremental_stream(self, stream):
         """
         Method to call all incremental synced streams
         """
+        last_updated = format_last_updated_for_request(
+            stream.update_and_return_bookmark(),
+            self.replication_key_format
+        )
 
-        # need to call each resource ID individually
-        for space_id in self.client.config['space_ids']:
+        request_config = {
+            'url': self.generate_api_url(stream),
+            "headers": {},
+            'params': self.build_initial_params(last_updated),
+            'run': True
+        }
 
-            last_updated = format_last_updated_for_request(
-                stream.update_and_return_bookmark(space_id),
-                self.replication_key_format
-            )
+        LOGGER.info("Extracting stream {s} since {d}".format(s=stream,
+                                                             d=last_updated))
 
-            request_config = {
-                'url': self.generate_api_url(stream, space_id),
-                "headers": {},
-                'params': self.build_initial_params(last_updated),
-                'run': True
-            }
+        while request_config['run']:
+            res = self.client.make_request(request_config)
 
-            LOGGER.info("Extracting space {s} since {d}".format(s=space_id,
-                                                                d=last_updated))
+            records = res.json().get('items')
 
-            while request_config['run']:
-                res = self.client.make_request(request_config)
+            LOGGER.info('Received {n} records'.format(n=len(records)))
 
-                records = res.json().get('items')
+            transform_write_and_count(stream, records)
 
-                LOGGER.info('Received {n} records for space {s}'.format(n=len(records),
-                                                                        s=space_id))
+            last_updated = self.get_latest_record_date(records)
 
-                transform_write_and_count(stream, records)
+            LOGGER.info('Setting last updated for stream {s} to {d}'.format(
+                s=stream,
+                d=last_updated
+            ))
+            stream.update_bookmark(last_updated)
 
-                last_updated = self.get_latest_record_date(records)
+            request_config = self.update_for_next_call(len(records), request_config)
 
-                LOGGER.info('Setting last updated for space {s} to {d}'.format(
-                    s=space_id,
-                    d=last_updated
-                ))
-                stream.update_bookmark(last_updated, space_id)
+        return last_updated
 
-                request_config = self.update_for_next_call(len(records), request_config)
-
-            return last_updated
-
-    def call_full_stream(self, stream):
-        """
-        Method to call all fully synced streams
-        """
-        for space_id in self.client.config['space_ids']:
-            request_config = {
-                'url': self.generate_api_url(stream, space_id),
-                "headers": {},
-                'params': self.build_params(stream),
-                'run': True
-            }
-
-            LOGGER.info("Extracting data for space {s}".format(s=space_id))
-
-            while request_config['run']:
-                res = self.client.make_request(request_config)
-
-                records = res.json().get('items')
-
-                LOGGER.info('Received {n} records for space {s}'.format(n=len(records),
-                                                                        s=space_id))
-
-                transform_write_and_count(stream, records)
-
-                request_config = self.update_for_next_call(len(records), request_config)
-
-    def generate_api_url(self, stream, space_id):
-        return '/'.join([self.base_url, stream.stream_metadata['api-path'], space_id,
-                         'environments/master/entries'])
+    def generate_api_url(self, stream):
+        return '/'.join([self.base_url, 'spaces', self.space_id, 'environments/master',
+                         stream.stream_metadata['api-path']])
 
     @staticmethod
     def get_latest_record_date(records):

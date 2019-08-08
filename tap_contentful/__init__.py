@@ -1,15 +1,16 @@
 from tap_kit import main_method, BaseClient
-from .streams import SpacesStream
+from .streams import EntriesStream
 from .executor import ContentfulExecutor
 
 
 REQUIRED_CONFIG_KEYS = [
 	"start_date",
 	"access_token",
+	"space_id",
 ]
 
 STREAMS = [
-	SpacesStream,
+	EntriesStream,
 ]
 
 
