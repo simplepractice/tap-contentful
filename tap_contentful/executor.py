@@ -24,6 +24,31 @@ class ContentfulExecutor(TapExecutor):
         self.access_token = self.client.config['access_token']
         self.space_id = self.client.config['space_id']
 
+    def call_full_stream(self, stream):
+        """
+        Method to call all fully synced streams
+        """
+
+        request_config = {
+            'url': self.generate_api_url(stream),
+            'headers': self.build_headers(),
+            'params': self.build_initial_params(),
+            'run': True
+        }
+
+        LOGGER.info("Extracting {}".format(stream))
+
+        while request_config['run']:
+            res = self.client.make_request(request_config)
+
+            records = res.json().get('items')
+
+            LOGGER.info('Received {n} records'.format(n=len(records)))
+
+            transform_write_and_count(stream, records)
+
+            request_config = self.update_for_next_call(len(records), request_config)
+
     def call_incremental_stream(self, stream):
         """
         Method to call all incremental synced streams
@@ -35,7 +60,7 @@ class ContentfulExecutor(TapExecutor):
 
         request_config = {
             'url': self.generate_api_url(stream),
-            "headers": {},
+            "headers": self.build_headers(),
             'params': self.build_initial_params(last_updated),
             'run': True
         }
@@ -81,14 +106,19 @@ class ContentfulExecutor(TapExecutor):
         last_record = records[-1]
         return last_record['sys']['updatedAt']
 
-    def build_initial_params(self, last_updated):
-        return {
+    def build_initial_params(self, last_updated=None):
+        base_params = {
             'access_token': self.access_token,
             'limit': 1000,
             'skip': 0,
             'order': 'sys.updatedAt',
-            'sys.updatedAt[gt]': last_updated
         }
+
+        if last_updated:
+            # for extracting incrementally
+            base_params['sys.updatedAt[gt]'] = last_updated
+
+        return base_params
 
     @staticmethod
     def build_next_params(params):
@@ -111,3 +141,7 @@ class ContentfulExecutor(TapExecutor):
                 "params": self.build_next_params(request_config['params']),
                 "run": True
             }
+
+    @staticmethod
+    def build_headers():
+        return {}
