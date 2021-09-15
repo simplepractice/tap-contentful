@@ -109,7 +109,7 @@ class ContentfulExecutor(TapExecutor):
     def build_initial_params(self, last_updated=None):
         base_params = {
             'access_token': self.access_token,
-            'limit': 1000,
+            'limit': 100,
             'skip': 0,
             'order': 'sys.updatedAt',
         }
@@ -123,7 +123,7 @@ class ContentfulExecutor(TapExecutor):
     @staticmethod
     def build_next_params(params):
         if params.get('skip') is not None:
-            params['skip'] += 1000
+            params['skip'] += 100
         return params
 
     def update_for_next_call(self, num_records_received, request_config):
