@@ -127,7 +127,7 @@ class ContentfulExecutor(TapExecutor):
         return params
 
     def update_for_next_call(self, num_records_received, request_config):
-        if num_records_received < 1000:  # 1000 is the max num of records per request
+        if num_records_received < 100:  # 100 is the max num of records per request
             return {
                 "url": request_config['url'],
                 "headers": {},
