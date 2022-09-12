@@ -123,11 +123,11 @@ class ContentfulExecutor(TapExecutor):
     @staticmethod
     def build_next_params(params):
         if params.get('skip') is not None:
-            params['skip'] += 100
+            params['skip'] += 10
         return params
 
     def update_for_next_call(self, num_records_received, request_config):
-        if num_records_received < 100:  # 100 is the max num of records per request
+        if num_records_received < 10:  # 10 is the max num of records per request
             return {
                 "url": request_config['url'],
                 "headers": {},
